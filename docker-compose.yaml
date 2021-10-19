@@ -1,0 +1,77 @@
+version: "3.7"
+services:
+  calculator:
+    container_name: calculator
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/calculator
+      dockerfile: Dockerfile
+    ports:
+      - 3000:80
+    links:
+      - addition
+      - division
+      - multiplication
+      - remainder
+      - subtraction
+
+  addition:
+    container_name: addition
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/addition
+      dockerfile: Dockerfile
+    ports:
+      - 3001:80
+
+  division:
+    container_name: division
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/division
+      dockerfile: Dockerfile
+    ports:
+      - 3002:80
+
+  multiplication:
+    container_name: multiplication
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/multiplication
+      dockerfile: Dockerfile
+    ports:
+      - 3005:80
+
+  remainder:
+    container_name: remainder
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/remainder
+      dockerfile: Dockerfile
+    ports:
+      - 3007:80
+
+  subtraction:
+    container_name: subtraction
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/subtraction
+      dockerfile: Dockerfile
+    ports:
+      - 3008:80
+
+  client:
+    container_name: client
+    labels:
+      app: cloud-engineer-challenge
+    build:
+      context: services/client
+      dockerfile: Dockerfile
+    links:
+      - calculator
