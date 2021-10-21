@@ -84,6 +84,12 @@ We need you to implement a CI system to test it.
 
 Choose one system, travis-ci, gitlab-ci, circleci... whatever you want and make the necessary change to have a proper Git and CI flow.
 
+### **Answer**:
+
+A simple bitbucket pipeline (bitbucket-pipelines.yml) has been created in order to answer this challenge.
+
+https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/14
+
 ## Challenge 4. Deploy it to kubernetes
 
 At this point you should have a proper flow going. Now we need to deploy it!

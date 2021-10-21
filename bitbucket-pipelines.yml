@@ -1,0 +1,131 @@
+image: kilabs/cloud-engineer-challenge-calculator:latest
+
+options:
+  docker: true
+
+definitions:
+  steps:   
+    - step: &run-tests
+        name: "Run Tests"
+        script:
+          - npm install -y -g mocha
+          - for test in $(find -type d -iname test); do 
+              npx mocha $test ;
+            done
+    - step: &run-build-addition
+        name: "Run Build addition"
+        script:
+          - docker build services/addition 
+            --tag api-service-addition:latest 
+            --file services/addition/Dockerfile
+          - docker save api-service-addition:latest 
+            --output addition.tar
+        artifacts: [ addition.tar ]
+        caches: [ docker ]
+    - step: &run-build-division
+        name: "Run Build division"
+        script:
+          - docker build services/division 
+            --tag api-service-division:latest 
+            --file services/division/Dockerfile
+          - docker save api-service-division:latest 
+            --output division.tar
+        artifacts: [ division.tar ]
+        caches: [ docker ]
+    - step: &run-build-multiplication
+        name: "Run Build multiplication"
+        script:
+          - docker build services/multiplication 
+            --tag api-service-multiplication:latest 
+            --file services/multiplication/Dockerfile
+          - docker save api-service-multiplication:latest 
+            --output multiplication.tar
+        artifacts: [ multiplication.tar ]
+        caches: [ docker ]
+    - step: &run-build-subtraction
+        name: "Run Build subtraction"
+        script:
+          - docker build services/subtraction 
+            --tag api-service-subtraction:latest 
+            --file services/subtraction/Dockerfile
+          - docker save api-service-subtraction:latest 
+            --output subtraction.tar
+        artifacts: [ subtraction.tar ]
+        caches: [ docker ]
+    - step: &run-build-remainder
+        name: "Run Build remainder"
+        script:
+          - docker build services/remainder 
+            --tag api-service-remainder:latest 
+            --file services/remainder/Dockerfile
+          - docker save api-service-remainder:latest 
+            --output remainder.tar
+        artifacts: [ remainder.tar ]
+        caches: [ docker ]
+    - step: &run-build-calculator
+        name: "Run Build remainder"
+        script:
+          - docker build services/calculator 
+            --tag api-service-calculator:latest 
+            --file services/calculator/Dockerfile
+          - docker save api-service-calculator:latest 
+            --output calculator.tar
+        artifacts: [ calculator.tar ]
+        caches: [ docker ]
+    - step: &run-deploy
+        name: "Run Deploy"
+        script: 
+          - NEW_TAG="${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER"
+          - NEW_TAG_LATEST="latest-$BITBUCKET_DEPLOYMENT_ENVIRONMENT"
+          - find . -iname '*.tar' -exec docker load --input {} \;
+          - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+          - for image in $(docker images --format "{{.Repository}}" --filter "dangling=false"); do
+              docker tag $image "jsoliveira/${image#*:}:$NEW_TAG";
+              docker tag $image "jsoliveira/${image#*:}:$NEW_TAG_LATEST" ;
+              docker push "jsoliveira/${image#*:}:$NEW_TAG";
+              docker push "jsoliveira/${image#*:}:$NEW_TAG_LATEST";
+            done
+pipelines:
+  default:
+    - step: *run-tests
+    - parallel:
+      - step: *run-build-addition
+      - step: *run-build-division
+      - step: *run-build-multiplication
+      - step: *run-build-subtraction
+      - step: *run-build-calculator
+    - step: 
+        <<: *run-deploy
+        name: "Run Deploy to test (manual)"
+        trigger: manual
+        deployment: test
+    - step: 
+        <<: *run-deploy
+        name: "Run Deploy to prod (manual)"
+        trigger: manual
+        deployment: production
+  branches:
+    'develop':
+      - step: *run-tests
+      - parallel:
+        - step: *run-build-addition
+        - step: *run-build-division
+        - step: *run-build-multiplication
+        - step: *run-build-subtraction
+        - step: *run-build-calculator
+      - step:
+          <<: *run-deploy
+          name: "Run Deploy to test (auto)"
+          deployment: test
+    'master':
+      - step: *run-tests
+      - parallel:
+        - step: *run-build-addition
+        - step: *run-build-division
+        - step: *run-build-multiplication
+        - step: *run-build-subtraction
+        - step: *run-build-calculator
+      - step:
+          <<: *run-deploy
+          name: "Run Deploy to prod (auto)"
+          deployment: production
