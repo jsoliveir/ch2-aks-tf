@@ -70,11 +70,50 @@ As you may notice the client service is not working properly and is throwing an 
 
 We need you to fix it!
 
+### **Answer**:
+
+-   Change Log:
+    -   fixed auth property in `client/config.json` 
+    -   disabled the expressions [ramainder] and [subtraction] (in `client/config.json`). Those expressions were causing errors due to divisions by zero. The development team must check the client.randomExpression() implementation.
+
 ## Challenge 2. Development flow
 
 The team is complaining that confusing to have lots of incomplete work commit to master and it's hard to track what code is in what environment.
 
 Can you come up with a strategy to solve this issue?
+
+### **Answer**:
+
+_I would suggest the following branch strategy based on feature and release branches._
+
+-  **Suggested Branches**:
+    -   `master`:  a production snapshop (the source of truth)
+    -   `develop`:  a copy of production + new features and bug fixes (it might represent the test environment)
+    -   `release/*`: branches for supporting new releases (context isolation)
+    -   `feature/*`: branches that will stand for new features or business requirements
+    -   `bugfix/*`: branches that will be used for production support (bug fixing)
+
+-  **When a project is starting...**:
+    - 1. The team creates a `release` branch from master (`release/xyz`)
+    - 2. Then the team creates `feature` branch (`feature/xpto`) based on the `release` one created before
+    - 3. A business requirement is commited into the `feature` branch (`feature/xpto`).
+    - 3. Once the requirement is ready, the `feature` branch (`feature/xpto`) is merged into the `release` branch (`release/xyz`)
+    - 4. The `release` branch (`release/xyz`), now contains a new `feature` and can be merged into `develop` so the tester can check the `feature` implementation. 
+        (merging the `feature` branch into `develop` is also a valid option but, at the end, it should get merged into the `release` branch [flexibility on projects concurrency])
+    
+-   **When a critical bug comes up from production...**
+    - 5. The team creates a `bugfix` branch (`bugfix/fix`) based on `master` (copy of production)
+    - 6. The bug fix is committed into the new `bugfix` branch and then merged to `develop` so the tester can make sure that the issue is fixed. 
+    - 7. Since the tester gives the thumbs up, the `bugfix` branch can be merged to `master` 
+        ( merging `develop` into `master` is also a valid option, but the team must be aware of new features in develop [waiting the release] before the merging ).
+
+```
+    [feature/*]    /7-\\------\\-----------------\\
+    [release/*]   /7-  \_------\_---\\---\\---\_--\\--\\
+    [develop  ]  /7-        /7-------\_---\\-------\_--\\------>
+    [master   ]  \-        //   /7---------\_-----------\_--->
+    [bugfix/* ]   \_-----.//---//
+```
 
 ## Challenge 3. Test the application before deployment
 
