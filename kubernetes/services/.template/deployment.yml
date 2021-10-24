@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  template:
+    metadata:
+      labels:
+        app: myapp
+    spec:
+      containers:
+      - name: myapp
+        image: <Image>
+        resources:
+          limits:
+            memory: "50Mi"
+            cpu: "100m"
+        livenessProbe:
+           tcpSocket:
+              port: 80
+        readinessProbe:
+           tcpSocket:
+              port: 80
+        ports:
+        - containerPort: 80
