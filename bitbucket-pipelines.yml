@@ -68,10 +68,10 @@ definitions:
           - NEW_TAG="${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER"
           - NEW_TAG_LATEST="latest-$BITBUCKET_DEPLOYMENT_ENVIRONMENT"
           - for image in $(docker images --format "{{.Repository}}" --filter "dangling=false"); do
-              docker tag $image "jsoliveira/api-services-${image#*:}:$NEW_TAG";
-              docker tag $image "jsoliveira/api-services-${image#*:}:$NEW_TAG_LATEST" ;
-              docker push "jsoliveira/api-services-${image#*:}:$NEW_TAG";
-              docker push "jsoliveira/api-services-${image#*:}:$NEW_TAG_LATEST";
+              docker tag $image "jsoliveira/api-service-${image#*:}:$NEW_TAG";
+              docker tag $image "jsoliveira/api-service-${image#*:}:$NEW_TAG_LATEST" ;
+              docker push "jsoliveira/api-service-${image#*:}:$NEW_TAG";
+              docker push "jsoliveira/api-service-${image#*:}:$NEW_TAG_LATEST";
             done
     - step: &run-cd
         name: "Run Deploy (CD)"
@@ -82,12 +82,12 @@ definitions:
               test|*) BRANCH=develop ;;
             esac
           - apk add yq git
-          - for kustomization in $(find kubernetes/services/ -iname kustomization.yml -mindepth 2 -maxdepth 2); do
+          - for kustomization in $(find kubernetes/services/ -iname 'kustomization.y*ml' -mindepth 2 -maxdepth 2); do
               yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $kustomization;
               git add $kustomization;
             done
           - git clean -d -f
-          - git commit -m "[skip ci] merged ${BITBUCKET_BRANCH} into ${BRANCH}"           
+          - git commit -m "[skip ci] merged ${BITBUCKET_BRANCH} into ${BRANCH}"          
           - git checkout -b ${BRANCH} || git checkout ${BRANCH}
           - git merge $BITBUCKET_BRANCH --squash
           - git push -u origin ${BRANCH}

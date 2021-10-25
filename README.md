@@ -177,5 +177,5 @@ During the installation a remote repository containing the K8s workloads is set.
 
 Flux will check for changes on the Kubernetes/aksXX-dev cluster folder of the repoitory every 2m. (each flux instance should be pointed to separate directory)
 
-When the bitbucket pipeline run the deployment step the image tag is updated so FluxCD will see the changed and apply them into the AKS cluster.
+When the deployment step runs (bitbucket-pipelines), the image tag will be updated so FluxCD will see the changed and apply them into the AKS cluster.
 
