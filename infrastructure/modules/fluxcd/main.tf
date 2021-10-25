@@ -30,6 +30,7 @@ provider "kubectl" {
 }
 
 resource "kubernetes_namespace" "flux_system" {
+  count      = var.active ? 1 : 0
   metadata {
     name = "flux-system"
   }
@@ -51,24 +52,25 @@ locals {
 }
 
 resource "kubectl_manifest" "install" {
-  count      = length(local.flux_install_docs)
+  count      = var.active ? length(local.flux_install_docs) : 0
   yaml_body  = local.flux_install_docs[count.index]
   depends_on = [
-    kubernetes_namespace.flux_system
+    kubernetes_namespace.flux_system.0
   ]
 }
 
 resource "kubectl_manifest" "sync" {
-  count      = length(local.flux_sync_docs) 
+  count      = var.active ? length(local.flux_sync_docs) : 0
   yaml_body  = local.flux_sync_docs[count.index]
   depends_on = [
-    kubernetes_namespace.flux_system, 
-    kubectl_manifest.install
+    kubernetes_namespace.flux_system.0, 
+    kubectl_manifest.install.0
   ]
 }
 
 resource "kubernetes_secret" "main" {
-  depends_on = [kubectl_manifest.install]
+  count      = var.active ? 1 : 0
+  depends_on = [kubectl_manifest.install.0]
   metadata {
     name      = data.flux_sync.main.secret
     namespace = data.flux_sync.main.namespace

@@ -1,3 +1,7 @@
+variable "active" {
+    type =  bool    
+    default= true
+}
 variable "kubernetes" {
     type = object({  
         host                   = string

@@ -12,5 +12,5 @@ images:
   - name: jsoliveira/.*calculator
     # newTag: v1.0.0  #stick to a specific version
 
-bases:
+resources:
   - ../services

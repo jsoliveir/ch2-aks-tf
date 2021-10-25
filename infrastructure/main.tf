@@ -16,6 +16,7 @@ module "aks01_cluster_dev" {
 }
 
 module "fluxcd_install" {
+  active                 =  true
   source                 = "./modules/fluxcd"
   kubernetes = {
     host                   = module.aks01_cluster_dev.kube_config.host
