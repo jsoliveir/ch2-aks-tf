@@ -4,8 +4,8 @@ bases:
   - ../.template/api
 images:
   - name: <template>
-    newName: jsoliveira/api-service-client
-    newTag: master.v13
+    newName: jsoliveira/api-services-client
+    newTag: master.v16
 commonLabels:
   app: client
 replacements:
