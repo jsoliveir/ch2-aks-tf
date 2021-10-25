@@ -4,8 +4,17 @@ bases:
   - ../.template/api
 images:
   - name: <template>
-    newName: jsoliveira/api-service-calculator
+<<<<<<< HEAD
+    newName: jsoliveira/api-services-calculator
     newTag: master.v3
+=======
+    newName: jsoliveira/api-service-calculator
+<<<<<<< HEAD
+    newTag: master.v12
+>>>>>>> 9a873c5 ([skip ci] merged master into master)
+=======
+    newTag: master.v13
+>>>>>>> 159c318 ([skip ci] merged master into master)
 commonLabels:
   name: calculator
 replacements:
