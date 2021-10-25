@@ -5,7 +5,7 @@ bases:
 images:
   - name: <Image>
     newName: jsoliveira/api-service-multiplication
-    newTag: challenge-ch-4.v41
+    newTag: master.v3
 commonLabels:
   name: multiplication
 replacements:

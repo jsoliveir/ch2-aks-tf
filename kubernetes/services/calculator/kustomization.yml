@@ -5,7 +5,7 @@ bases:
 images:
   - name: <Image>
     newName: jsoliveira/api-service-calculator
-    newTag: challenge-ch-4.v41
+    newTag: master.v3
 commonLabels:
   name: calculator
 replacements:

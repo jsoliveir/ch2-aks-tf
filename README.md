@@ -154,6 +154,9 @@ Boot up the infrastructure:
 # set the working directory
 cd infrastructure
 
+#set the access key for terraform remote backend
+$env:ARM_ACCESS_KEY="<azure storage account access key>"
+
 # install the terraform providers
 terraform init
 
@@ -163,3 +166,16 @@ terraform apply -auto-approve
 ## Bonus
 
 -   Update your CI to also do CD
+
+## Aswer
+
+For the CD platform I've chosen FLuxCD.
+
+FluxCD is installed along with the infrastuture (using terraform)
+
+During the installation a remote repository containing the K8s workloads is set. 
+
+Flux will check for changes on the Kubernetes/aksXX-dev cluster folder of the repoitory every 2m. (each flux instance should be pointed to separate directory)
+
+When the bitbucket pipeline run the deployment step the image tag is updated so FluxCD will see the changed and apply them into the AKS cluster.
+

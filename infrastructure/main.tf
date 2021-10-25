@@ -25,8 +25,8 @@ module "fluxcd_install" {
   }
   config = {
     repository = "https://bitbucket.org/jsoliveira/challenge-devops-master"
-    repository_branch = "challenge/ch-4"
-    repository_path = "kubernetes"
+    repository_branch = "master"
+    repository_path = "kubernetes/aks01-dev"
     namespace = "flux-system"
   }
 }
