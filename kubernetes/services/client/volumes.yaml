@@ -5,7 +5,6 @@ metadata:
 spec:
   template:
     spec:
-     
       containers:
         - name: <template>
           volumeMounts:
@@ -13,6 +12,10 @@ spec:
               mountPath: /opt/app/config.json
               subPath: config.json
               readOnly: false
+          livenessProbe:
+            $patch: delete
+          readinessProbe:
+            $patch: delete
       volumes:
         - name: client-config
           configMap:
