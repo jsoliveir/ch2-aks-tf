@@ -3,31 +3,8 @@ terraform {
     storage_account_name = "storageaccountstate"
     container_name       = "terraform"
     key                  = "dev.terraform.tfstate"
-    # set the storage access key in ARM_ACCESS_KEY (environment variable)
+    # set the storage access key in theARM_ACCESS_KEY (environment variable)
   }
-
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 2.82.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 2.7.0"
-    }
-    helm = {
-      source = "hashicorp/helm"
-      version = "~> 2.3.0"
-    }
-    kubernetes = {
-      source = "hashicorp/kubernetes"
-      version = "2.6.1"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
 }
 
 module "aks01_cluster_dev" {

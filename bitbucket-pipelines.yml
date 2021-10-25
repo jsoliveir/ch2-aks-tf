@@ -15,76 +15,76 @@ definitions:
     - step: &run-build-addition
         name: "Run Build addition"
         script:
-          - docker build services/addition 
-            --tag api-service-addition:latest 
-            --file services/addition/Dockerfile
-          - docker save api-service-addition:latest 
-            --output addition.tar
+          - docker build services/division -t addition:latest -f services/addition/Dockerfile
+          - docker save addition:latest --output addition.tar
         artifacts: [ addition.tar ]
         caches: [ docker ]
     - step: &run-build-division
         name: "Run Build division"
         script:
-          - docker build services/division 
-            --tag api-service-division:latest 
-            --file services/division/Dockerfile
-          - docker save api-service-division:latest 
-            --output division.tar
+          - docker build services/division -t division:latest -f services/division/Dockerfile
+          - docker save division:latest --output division.tar
         artifacts: [ division.tar ]
         caches: [ docker ]
     - step: &run-build-multiplication
         name: "Run Build multiplication"
         script:
-          - docker build services/multiplication 
-            --tag api-service-multiplication:latest 
-            --file services/multiplication/Dockerfile
-          - docker save api-service-multiplication:latest 
-            --output multiplication.tar
+          - docker build services/division -t multiplication:latest -f services/multiplication/Dockerfile
+          - docker save multiplication:latest --output multiplication.tar
         artifacts: [ multiplication.tar ]
         caches: [ docker ]
     - step: &run-build-subtraction
         name: "Run Build subtraction"
         script:
-          - docker build services/subtraction 
-            --tag api-service-subtraction:latest 
-            --file services/subtraction/Dockerfile
-          - docker save api-service-subtraction:latest 
-            --output subtraction.tar
+          - docker build services/subtraction -t subtraction:latest -f services/subtraction/Dockerfile
+          - docker save subtraction:latest --output subtraction.tar
         artifacts: [ subtraction.tar ]
         caches: [ docker ]
     - step: &run-build-remainder
         name: "Run Build remainder"
         script:
-          - docker build services/remainder 
-            --tag api-service-remainder:latest 
-            --file services/remainder/Dockerfile
-          - docker save api-service-remainder:latest 
-            --output remainder.tar
+          - docker build services/remainder -t remainder:latest -f services/remainder/Dockerfile
+          - docker save remainder:latest --output remainder.tar
         artifacts: [ remainder.tar ]
         caches: [ docker ]
     - step: &run-build-calculator
-        name: "Run Build remainder"
+        name: "Run Build calculator"
         script:
-          - docker build services/calculator 
-            --tag api-service-calculator:latest 
-            --file services/calculator/Dockerfile
-          - docker save api-service-calculator:latest 
-            --output calculator.tar
+          - docker build services/calculator -t calculator:latest -f services/calculator/Dockerfile
+          - docker save calculator:latest --output calculator.tar
         artifacts: [ calculator.tar ]
         caches: [ docker ]
-    - step: &run-deploy
-        name: "Run Deploy"
+    - step: &run-ci
+        name: "Push container images (CI)"
         script: 
+          - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+          - find . -iname '*.tar' -exec docker load --input {} \;
           - NEW_TAG="${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER"
           - NEW_TAG_LATEST="latest-$BITBUCKET_DEPLOYMENT_ENVIRONMENT"
-          - find . -iname '*.tar' -exec docker load --input {} \;
-          - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
           - for image in $(docker images --format "{{.Repository}}" --filter "dangling=false"); do
-              docker tag $image "jsoliveira/${image#*:}:$NEW_TAG";
-              docker tag $image "jsoliveira/${image#*:}:$NEW_TAG_LATEST" ;
-              docker push "jsoliveira/${image#*:}:$NEW_TAG";
-              docker push "jsoliveira/${image#*:}:$NEW_TAG_LATEST";
+              docker tag $image "jsoliveira/api-services-${image#*:}:$NEW_TAG";
+              docker tag $image "jsoliveira/api-services-${image#*:}:$NEW_TAG_LATEST" ;
+              docker push "jsoliveira/api-services-${image#*:}:$NEW_TAG";
+              docker push "jsoliveira/api-services-${image#*:}:$NEW_TAG_LATEST";
             done
+    - step: &run-cd
+        name: "Run Deploy (CD)"
+        image: alpine:latest
+        script: 
+          - case $BITBUCKET_DEPLOYMENT_ENVIRONMENT in
+              prod*) BRANCH=master ;;
+              test|*) BRANCH=develop ;;
+            esac
+          - apk add yq git
+          - for kustomization in $(find kubernetes/services/ -iname kustomization.yml -mindepth 2 -maxdepth 2); do
+              yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $kustomization;
+              git add $kustomization;
+            done
+          - git commit -m "[skip ci] merged ${BITBUCKET_BRANCH} into ${BRANCH}"           
+          - git checkout -b ${BRANCH} || git checkout ${BRANCH}
+          - git merge $BITBUCKET_BRANCH --squash
+          - git push -u origin ${BRANCH}
+
 pipelines:
   default:
     - step: *run-tests
@@ -94,14 +94,15 @@ pipelines:
       - step: *run-build-multiplication
       - step: *run-build-subtraction
       - step: *run-build-calculator
+    - step: *run-ci
     - step: 
-        <<: *run-ci
-        name: "Run Deploy to test (manual)"
+        <<: *run-cd
+        name: "Run Deploy to test"
         trigger: manual
         deployment: test
     - step: 
-        <<: *run-ci
-        name: "Run Deploy to prod (manual)"
+        <<: *run-cd
+        name: "Run Deploy to prod"
         trigger: manual
         deployment: production
   branches:
@@ -113,9 +114,10 @@ pipelines:
         - step: *run-build-multiplication
         - step: *run-build-subtraction
         - step: *run-build-calculator
-      - step:
-          <<: *run-ci
-          name: "Run Deploy to test (auto)"
+      - step: *run-ci
+      - step: 
+          <<: *run-cd
+          name: "Run Deploy to test"
           deployment: test
     'master':
       - step: *run-tests
@@ -125,7 +127,9 @@ pipelines:
         - step: *run-build-multiplication
         - step: *run-build-subtraction
         - step: *run-build-calculator
+      - step: *run-ci
       - step:
-          <<: *run-ci
-          name: "Run Deploy to prod (auto)"
+          <<: *run-cd
+          name: "Run Deploy to prod"
           deployment: production
+      
