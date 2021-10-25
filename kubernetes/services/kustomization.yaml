@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: api
 
 bases:
-  - namespace.yml
+  - namespace.yaml
 
 resources:
   - multiplication
