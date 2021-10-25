@@ -117,7 +117,7 @@ pipelines:
       - step: *run-ci
       - step: 
           <<: *run-cd
-          name: "Run Deploy to test"
+          name: "Run Deploy to test (CD)"
           deployment: test
     'master':
       - step: *run-tests
@@ -130,6 +130,6 @@ pipelines:
       - step: *run-ci
       - step:
           <<: *run-cd
-          name: "Run Deploy to prod"
+          name: "Run Deploy to prod (CD)"
           deployment: production
       

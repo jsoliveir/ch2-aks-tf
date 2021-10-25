@@ -143,6 +143,23 @@ As a good cloud engineer you will do this in an automated and reproducible way, 
 
 (note: since testing this solution may incur some costs, we will ignore errors that might come from not testing/running the script)
 
+## Answer
+For accomplishing this challenge I've chosen terraform with azure as the main cloud provider.
+
+The infrastructure state (terraform state) has been stored in a private azure storage account because of the the existing of sensitive data. The details can be found in the [./infrastructure/main.tf](./infrastructure/main.tf) file.
+
+Boot up the infrastructure:
+
+```powershell
+# set the working directory
+cd infrastructure
+
+# install the terraform providers
+terraform init
+
+# boot up the infra
+terraform apply -auto-approve
+```
 ## Bonus
 
 -   Update your CI to also do CD
