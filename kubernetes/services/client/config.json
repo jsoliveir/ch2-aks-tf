@@ -1,6 +1,6 @@
 {
   "logLevel": "info",
-  "calculatorHostname": "calculator.svc",
+  "calculatorHostname": "calculator.api.svc",
   "auth": "Bearer base-client",
   "mainLoopSleep": {
       "min": 1000,

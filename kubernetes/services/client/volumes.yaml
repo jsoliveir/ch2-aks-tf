@@ -5,11 +5,14 @@ metadata:
 spec:
   template:
     spec:
+     
       containers:
         - name: <template>
           volumeMounts:
             - name: client-config
               mountPath: /opt/app/config.json
+              subPath: config.json
+              readOnly: false
       volumes:
         - name: client-config
           configMap:
