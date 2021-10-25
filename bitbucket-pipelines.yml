@@ -13,10 +13,10 @@ definitions:
               npx mocha $test ;
             done
     - step: &run-build-client
-        name: "Run Build addition"
+        name: "Run Build client"
         script:
-          - docker build services/client -t addition:latest -f services/client/Dockerfile
-          - docker save addition:latest --output client.tar
+          - docker build services/client -t client:latest -f services/client/Dockerfile
+          - docker save client:latest --output client.tar
         artifacts: [ client.tar ]
     - step: &run-build-addition
         name: "Run Build addition"
@@ -86,6 +86,7 @@ definitions:
               yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $kustomization;
               git add $kustomization;
             done
+          - git config --local status.showUntrackedFiles no
           - git commit -m "[skip ci] merged ${BITBUCKET_BRANCH} into ${BRANCH}"           
           - git checkout -b ${BRANCH} || git checkout ${BRANCH}
           - git merge $BITBUCKET_BRANCH --squash
@@ -95,6 +96,7 @@ pipelines:
   default:
     - step: *run-tests
     - parallel:
+      - step: *run-build-client
       - step: *run-build-addition
       - step: *run-build-division
       - step: *run-build-multiplication
@@ -115,6 +117,7 @@ pipelines:
     'develop':
       - step: *run-tests
       - parallel:
+        - step: *run-build-client
         - step: *run-build-addition
         - step: *run-build-division
         - step: *run-build-multiplication
@@ -128,6 +131,7 @@ pipelines:
     'master':
       - step: *run-tests
       - parallel:
+        - step: *run-build-client
         - step: *run-build-addition
         - step: *run-build-division
         - step: *run-build-multiplication
