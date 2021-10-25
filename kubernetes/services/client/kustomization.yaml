@@ -4,20 +4,19 @@ bases:
   - ../.template/api
 images:
   - name: <template>
-    newName: jsoliveira/api-service-addition
+    newName: jsoliveira/api-service-client
     newTag: master.v3
 commonLabels:
-  name: addition
+  app: client
 replacements:
   - source:
       kind: Deployment
-      fieldPath: metadata.labels.name
+      fieldPath: metadata.labels.app
     targets:
       - select:
           kind: Deployment
         fieldPaths:
           - metadata.name
-          - spec.selector.matchLabels.app
           - spec.template.metadata.labels.app
           - spec.template.spec.containers.0.name
       - select:
@@ -25,3 +24,14 @@ replacements:
         fieldPaths:
           - metadata.name
           - spec.selector.app
+patchesStrategicMerge:
+  - volumes.yaml
+
+generatorOptions:
+  disableNameSuffixHash: true
+
+configMapGenerator:
+  - name: client-config
+    files:
+      - config.json
+        

@@ -3,7 +3,7 @@ kind: Kustomization
 bases:
   - ../.template/api
 images:
-  - name: <Image>
+  - name: <template>
     newName: jsoliveira/api-service-subtraction
     newTag: master.v3
 commonLabels:

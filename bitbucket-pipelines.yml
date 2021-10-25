@@ -12,6 +12,12 @@ definitions:
           - for test in $(find -type d -iname test); do 
               npx mocha $test ;
             done
+    - step: &run-build-client
+        name: "Run Build addition"
+        script:
+          - docker build services/client -t addition:latest -f services/client/Dockerfile
+          - docker save addition:latest --output client.tar
+        artifacts: [ client.tar ]
     - step: &run-build-addition
         name: "Run Build addition"
         script:

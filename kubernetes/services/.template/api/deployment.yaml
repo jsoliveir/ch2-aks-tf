@@ -1,19 +1,19 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: deployment
+  name: <template>
 spec:
   selector:
     matchLabels:
-      app: &name app
+      app: <template>
   template:
     metadata:
       labels:
-        app: *name
+        app: <template>
     spec:
       containers:
-      - name: *name
-        image: <Image>
+      - name: <template>
+        image: <template>
         resources:
           limits:
             memory: "50Mi"
