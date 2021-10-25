@@ -2,35 +2,30 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 bases:
-  - ../.template
+  - ../.template/api
 
-patches:
-- target:
-    kind: Deployment|Service
-  patch: |-
-    - op: replace
-      path: /metadata/name
-      value: addition
-  
-- target:
+images:
+  - name: <Image>
+    newName: jsoliveira/api-service-addition
+    newTag: latest-test
+
+commonLabels:
+  name: addition
+
+replacements:
+- source:
     kind: Deployment
-  patch: |-
-    - op: replace
-      path: /spec/selector/matchLabels/app
-      value: addition
-    - op: replace
-      path: /spec/template/metadata/labels/app
-      value: addition
-    - op: replace
-      path: /spec/template/spec/containers/0/name
-      value: addition
-    - op: replace
-      path: /spec/template/spec/containers/0/image
-      value: jsoliveira/api-service-addition:latest-test
-      
-- target:
-    kind: Service
-  patch: |-
-    - op: replace
-      path: /spec/selector/app
-      value: addition
+    fieldPath: metadata.labels.name
+  targets:
+  - select: 
+      kind: Deployment
+    fieldPaths:
+      - metadata.name
+      - spec.selector.matchLabels.app
+      - spec.template.metadata.labels.app
+      - spec.template.spec.containers.0.name
+  - select: 
+      kind: Service
+    fieldPaths:
+      - metadata.name
+      - spec.selector.app

@@ -2,34 +2,30 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
 bases:
-  - ../.template
+  - ../.template/api
 
-patches:
-- target:
-    kind: Deployment|Service
-  patch: |-
-    - op: replace
-      path: /metadata/name
-      value: multiplication
-- target:
+images:
+  - name: <Image>
+    newName: jsoliveira/api-service-multiplication
+    newTag: latest-test
+
+commonLabels:
+  name: multiplication
+
+replacements:
+- source:
     kind: Deployment
-  patch: |-
-    - op: replace
-      path: /spec/selector/matchLabels/app
-      value: multiplication
-    - op: replace
-      path: /spec/template/metadata/labels/app
-      value: multiplication
-    - op: replace
-      path: /spec/template/spec/containers/0/name
-      value: multiplication
-    - op: replace
-      path: /spec/template/spec/containers/0/image
-      value: jsoliveira/api-service-multiplication:latest-test
-
-- target:
-    kind: Service
-  patch: |-
-    - op: replace
-      path: /spec/selector/app
-      value: multiplication
+    fieldPath: metadata.labels.name
+  targets:
+  - select: 
+      kind: Deployment
+    fieldPaths:
+      - metadata.name
+      - spec.selector.matchLabels.app
+      - spec.template.metadata.labels.app
+      - spec.template.spec.containers.0.name
+  - select: 
+      kind: Service
+    fieldPaths:
+      - metadata.name
+      - spec.selector.app

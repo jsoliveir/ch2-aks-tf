@@ -95,12 +95,12 @@ pipelines:
       - step: *run-build-subtraction
       - step: *run-build-calculator
     - step: 
-        <<: *run-deploy
+        <<: *run-ci
         name: "Run Deploy to test (manual)"
         trigger: manual
         deployment: test
     - step: 
-        <<: *run-deploy
+        <<: *run-ci
         name: "Run Deploy to prod (manual)"
         trigger: manual
         deployment: production
@@ -114,7 +114,7 @@ pipelines:
         - step: *run-build-subtraction
         - step: *run-build-calculator
       - step:
-          <<: *run-deploy
+          <<: *run-ci
           name: "Run Deploy to test (auto)"
           deployment: test
     'master':
@@ -126,6 +126,6 @@ pipelines:
         - step: *run-build-subtraction
         - step: *run-build-calculator
       - step:
-          <<: *run-deploy
+          <<: *run-ci
           name: "Run Deploy to prod (auto)"
           deployment: production
