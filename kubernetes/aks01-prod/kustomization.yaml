@@ -10,7 +10,9 @@ images:
   - name: jsoliveira/.*
     newTag: latest-production
   - name: jsoliveira/.*calculator
-    # newTag: v1.0.0
+    newTag: master.v18 # version is stick
+  - name: jsoliveira/.*subtraction
+    newTag: master.v17 # version is stick
 
 resources:
   - ../services/multiplication
