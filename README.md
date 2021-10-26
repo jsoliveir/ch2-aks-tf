@@ -125,9 +125,20 @@ Choose one system, travis-ci, gitlab-ci, circleci... whatever you want and make 
 
 ### **Answer**:
 
-A simple bitbucket pipeline (bitbucket-pipelines.yml) has been created in order to answer this challenge.
+For CI I've chosen bitbucket pipelines (just for the fun of it).
 
-https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/14
+I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that will build and push the container into the my docker account.
+
+https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/17/
+
+
+There are multiple pipelines in the yaml files:
+- one that does the CI for dev on code pushing to develop
+- one that does the CI for prod on code pushing to master
+- one that let the developers chose the branch to deploy (manually)
+    - then the deploy gets finished the the deploy will run an automerge to master or develop accoording to the deployment target and will update the image version in the kubernetes workloads repo (or directory in our case).
+- FluxCD will know where to deploy the new pushed images (dev or prod) according to the branch and cluster directory. (more details down below)
+
 
 ## Challenge 4. Deploy it to kubernetes
 
