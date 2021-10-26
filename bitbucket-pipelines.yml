@@ -88,21 +88,6 @@ definitions:
           - git clean -d -f
           - git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
           - git push -u origin ${BITBUCKET_BRANCH}   
-    - step: &run-auto-merge
-        name: Run Deploy (automerge)
-        image: alpine:latest
-        script:
-          # (demo purposes) a pull request thru the bitbucket rest api should be used instead 
-          - apk add yq git
-          - case $BITBUCKET_DEPLOYMENT_ENVIRONMENT in
-              prod*) TARGET=master ;;
-              test|*) TARGET=develop ;;
-            esac
-          - git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" && git fetch
-          - git checkout origin/${TARGET} || git checkout -b ${TARGET}
-          - git pull -s recursive -X theirs
-          - git merge $BITBUCKET_BRANCH --squash
-          - git push -u origin ${TARGET}
 
 pipelines:
   default:
@@ -114,17 +99,7 @@ pipelines:
       - step: *run-build-multiplication
       - step: *run-build-subtraction
       - step: *run-build-calculator
-    # - step: *run-ci
-    - step: 
-        <<: *run-auto-merge
-        name: Deploy to dev (automerge)
-        trigger: manual
-        deployment: test
-    - step: 
-        <<: *run-auto-merge
-        name: Deploy to prod (automerge)
-        trigger: manual
-        deployment: production
+    - step: *run-ci
     
   branches:
     'develop':
@@ -141,11 +116,6 @@ pipelines:
             <<: *run-cd
             name: Run Deploy to test (CD)
             deployment: test
-      - step: 
-          <<: *run-auto-merge
-          name: Deploy to prod (automerge)
-          trigger: manual
-          deployment: production
      
     'master':
       - step: *run-tests

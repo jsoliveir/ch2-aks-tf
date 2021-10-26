@@ -105,7 +105,7 @@ _I would suggest the following branch strategy based on feature and release bran
     - 5. The team creates a `bugfix` branch (`bugfix/fix`) based on `master` (copy of production)
     - 6. The bug fix is committed into the new `bugfix` branch and then merged to `develop` so the tester can make sure that the issue is fixed. 
     - 7. Since the tester gives the thumbs up, the `bugfix` branch can be merged to `master` 
-        ( merging `develop` into `master` is also a valid option, but the team must be aware of new features in develop [waiting the release] before the merging ).
+        ( merging `develop` into `master` is also a valid option, but the team must be aware of new features in develop [waiting for the release] before the merging ).
 
 ```
     [feature/*]    /7-\\------\\-----------------\\
@@ -127,7 +127,7 @@ Choose one system, travis-ci, gitlab-ci, circleci... whatever you want and make 
 
 For CI I've chosen bitbucket pipelines (just for the fun of it).
 
-I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that will build and push the container into the my docker account.
+I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that will build and push the container images into the my docker hub account. https://hub.docker.com/u/jsoliveira
 
 https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/19/
 
@@ -148,26 +148,27 @@ Please create a script with whatever tools you which to deploy the app to a Kube
 ## Answer
 For this challenge I've created a new directory ([kubernetes](kubernetes/)) in the repository root.
 
-The kubernetes directory is ready to be used as a separate repository and contains all the K8s workloads needed for deploying the micro services solution.
+The kubernetes directory is ready to be used as a separate repository and it contains all the K8s workloads needed for deploying the micro services solution.
 
-Inside the kubernetes/ there are different folders according to our clusters setup (it's always good having control over components deployed in dev and prod)
+Inside the [kubernetes](kubernetes/) dir there are different folders reprenting the different AKS clusters.
+
+The Kustomization.yaml files will ensure that each cluster receive the proper workload definitions.
 
 Deploying K8s workloads to dev:
 
 ```powershell
 kubectl kustomize kubernetes/aks01-dev | kubectl -apply -f -
-```
 
-Deploying K8s workloads to prod (just as example):
+#or
 
-```powershell
 kubectl kustomize kubernetes/aks01-prod | kubectl -apply -f -
 ```
 
-Instead of creating helm charts I've chosen creating simple templates that are reused by the different services thru the kustomization tool.
+Instead of creating helm charts I've pereferd using simple templates using the kustomization tool.
 
 The template can be found under the [kubernetes/services/.template](kubernetes/services/.template) dir.
-The kustomziation files will make sure that all services inherit what's needed to get the apis up and running in K8s.
+
+The kustomziation files will make sure that all services inherit what's needed to get the containers running in a K8s CLuster.
 
 _For CD I've chosen FLuxCD and it will be installed along with the infrastructure.(More details down below.)_
 
@@ -182,11 +183,13 @@ As a good cloud engineer you will do this in an automated and reproducible way, 
 (note: since testing this solution may incur some costs, we will ignore errors that might come from not testing/running the script)
 
 ## Answer
-For accomplishing this challenge I've chosen terraform with azure as cloud provider.
+For accomplishing this challenge I've chosen terraform + azure as cloud provider.
 
-The infrastructure state (terraform state) has been stored in a private azure storage account because of the existing of sensitive data. The details of this setup can be found at [./infrastructure/main.tf](./infrastructure/main.tf).
+The infrastructure state (terraform state) has been stored in a private azure storage account (because of sensitive data). For this challenge I am assuming that high availability and extra security is not needed. 
 
-Booting up the infrastructure:
+The details of the infrastructure and AKS clusters setup can be found at [./infrastructure/main.tf](./infrastructure/main.tf).
+
+### Booting up the infrastructure:
 
 ```powershell
 # set the working directory
@@ -207,6 +210,12 @@ terraform apply -auto-approve
 
 ![](docs/azure.png)
 
+### Destroying the infra
+
+```powershell
+terraform destroy -auto-approve
+```
+
 ## Bonus
 
 -   Update your CI to also do CD
@@ -215,14 +224,14 @@ terraform apply -auto-approve
 
 For the CD platform I've chosen FLuxCD. https://fluxcd.io/
 
-FluxCD is installed along with the infrastuture (using terraform)
+FluxCD is installed along with the infrastuture (using terraform):
+- [./infrastructure/main.tf](./infrastructure/main.tf)
+- [./infrastructure/modules/fluxcd](./infrastructure/modules/fluxcd)
 
-During the installation a remote repository containing the K8s workloads is set. 
+During the installation a remote repository containing all the K8s workloads is configured.
 
-The FluxCD will be continuously looking for changes in the repository and applying de differences caught by going thru the aks01-dev kustomization entrypoint (kubernetes/aks01-dev for instance). 
+The FluxCD will be continuously looking for changes in the remote repository. When new commits arrive the differences are applyied to the existing AKS clusters thru the "kustomization" of the [aks01-dev](kubernetes/aks01-dev) and [aks01-prod](kubernetes/aks01-prod) directories.
 
-When a container is built and pushed to the container registry (CI) the pipeline updates the images of the services configured on the kustomization files existing in kubernetes/service directory.
+When a container is built by the bitbucket-pipelines.yml the version of the containers built are commited to to the kubernetes [repository](kubernetes/), then the FluxCD will sync the repository with the K8s cluster. 
 
-I could use the FluxCD image-automation controller, but I'd prefer to keep it simpler for now.
-
-
+I could use the FluxCD controllers for image-automation, but I'd prefer to keep it simpler.
