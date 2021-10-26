@@ -2,13 +2,23 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: api
 
-commonLabels:
-  cluster: aks01
-  environment: test
+commonAnnotations:
+  cluster: aks01-dev.westeurope.cloudapp.azure.com
+  environment: dev
 
 images:
   - name: jsoliveira/.*calculator
-    newTag: master.v17 # version is stick
+    newTag: master.v17 # version stick
 
 resources:
   - ../services
+
+replacements:
+  - source:
+      kind: Ingress
+      fieldPath: metadata.annotations.cluster
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host

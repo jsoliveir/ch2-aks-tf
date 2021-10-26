@@ -139,8 +139,6 @@ There are multiple pipelines in the yaml files:
     - then the deploy gets finished the the deploy will run an automerge to master or develop accoording to the deployment target and will update the image version in the kubernetes workloads repo (or directory in our case).
 - FluxCD will know where to deploy the new pushed images (dev or prod) according to the branch and cluster directory. (more details down below)
 
-![](docs/aks-k9s.png)
-
 ## Challenge 4. Deploy it to kubernetes
 
 At this point you should have a proper flow going. Now we need to deploy it!
@@ -196,6 +194,9 @@ cd infrastructure
 
 #set the access key for terraform remote backend (state)
 $env:ARM_ACCESS_KEY="<azure storage account access key>"
+
+# login into azure
+az login
 
 # install the terraform providers
 terraform init

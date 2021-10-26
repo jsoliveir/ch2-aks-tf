@@ -2,17 +2,18 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: api
 
-commonLabels:
-  cluster: aks02
+commonAnnotations:
+  cluster: aks01-prod.westeurope.cloudapp.azure.com
   environment: prod
 
 images:
   - name: jsoliveira/.*
     newTag: latest-master
   - name: jsoliveira/.*calculator
-    newTag: master.v18 # version is stick
+    newTag: master.v18 # version stick
   - name: jsoliveira/.*subtraction
-    newTag: master.v17 # version is stick
+    newTag: master.v17 # version stick
+
 
 resources:
   - ../services/multiplication
@@ -20,3 +21,14 @@ resources:
   - ../services/calculator
   - ../services/division
   - ../services/addition
+
+replacements:
+  - source:
+      kind: Ingress
+      fieldPath: metadata.annotations.cluster
+    targets:
+      - select:
+          kind: Ingress
+        fieldPaths:
+          - spec.rules.0.host
+

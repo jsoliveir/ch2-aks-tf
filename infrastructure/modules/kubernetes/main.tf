@@ -85,8 +85,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   depends_on = [
-    azurerm_resource_group.aks,
-
+    azurerm_resource_group.aks
   ]
 }
 
@@ -101,11 +100,11 @@ provider "helm" {
 }
 
 resource "azurerm_public_ip" "nginx_ingress" {
-  name                         = "nginx-ingress-pip"
+  name                         = "${var.cluster_name}-${var.environment}-nginx-ingress-pip"
   sku                          = azurerm_kubernetes_cluster.aks.network_profile.0.load_balancer_sku
   location                     = "${azurerm_kubernetes_cluster.aks.location}"
   resource_group_name          = "${azurerm_kubernetes_cluster.aks.node_resource_group}"
-  domain_name_label            = "${var.cluster_name}"
+  domain_name_label            = "${var.cluster_name}-${var.environment}"
   allocation_method            = "Static"
   depends_on = [
     azuread_service_principal.aks
