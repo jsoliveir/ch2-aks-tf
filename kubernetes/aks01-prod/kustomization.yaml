@@ -8,7 +8,7 @@ commonAnnotations:
 
 images:
   - name: jsoliveira/.*
-    newTag: develop.v2 
+    newTag: master.v2 
 
 
 bases:
@@ -37,4 +37,4 @@ patches:
     patch: |-
       - op: add
         path: /metadata/annotations/fluxcd.io~1tag.app
-        value: glob:develop-*
+        value: glob:master-*
