@@ -61,7 +61,8 @@ definitions:
         artifacts: [ calculator.tar ]
         caches: [ docker ]
     - step: &run-ci
-        name: "Push container images (CI)"
+        name: Push container images (CI)
+        image: alpine:latest
         script: 
           - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
           - find . -iname '*.tar' -exec docker load --input {} \;
@@ -74,25 +75,34 @@ definitions:
               docker push "jsoliveira/api-services-${image#*:}:$NEW_TAG_LATEST";
             done
     - step: &run-cd
-        name: "Run Deploy (CD)"
+        name: Run Deploy (CD)
         image: alpine:latest
         script: 
-          - case $BITBUCKET_DEPLOYMENT_ENVIRONMENT in
-              prod*) BRANCH=master ;;
-              test|*) BRANCH=develop ;;
-            esac
           - apk add yq git
-          - for kustomization in $(find kubernetes/services/ -iname 'kustomization.y*ml' -mindepth 2 -maxdepth 2); do
-              yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $kustomization;
-              git add $kustomization;
+          - find . -iname '*.tar' -exec docker load --input {} \;
+          - for image in $(docker images --format "{{.Repository}}" --filter "dangling=false"); do
+              KUSTOMIZATION=$(find kubernetes/services/*${image#*:} -iname "kustomization.y*ml" -print -quit);
+              yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $KUSTOMIZATION ;
+              git add $KUSTOMIZATION;              
             done
-          # (demo purposes) bitbucket rest api should be used instead #
           - git clean -d -f
-          - git commit -m "[skip ci] merged ${BITBUCKET_BRANCH} into ${BRANCH}"          
-          - git checkout -b ${BRANCH} || git checkout ${BRANCH}
-          - git pull -s recursive -X ours
+          - git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
+          - git push -u origin ${BITBUCKET_BRANCH}   
+    - step: &run-auto-merge
+        name: Run Deploy (automerge)
+        image: alpine:latest
+        script:
+          # (demo purposes) a pull request thru the bitbucket rest api should be used instead 
+          - apk add yq git
+          - case $BITBUCKET_DEPLOYMENT_ENVIRONMENT in
+              prod*) TARGET=master ;;
+              test|*) TARGET=develop ;;
+            esac
+          - git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*" && git fetch
+          - git checkout origin/${TARGET} || git checkout -b ${TARGET}
+          - git pull -s recursive -X theirs
           - git merge $BITBUCKET_BRANCH --squash
-          - git push -u origin ${BRANCH}
+          - git push -u origin ${TARGET}
 
 pipelines:
   default:
@@ -104,17 +114,18 @@ pipelines:
       - step: *run-build-multiplication
       - step: *run-build-subtraction
       - step: *run-build-calculator
-    - step: *run-ci
+    # - step: *run-ci
     - step: 
-        <<: *run-cd
-        name: "Run Deploy to test"
+        <<: *run-auto-merge
+        name: Deploy to dev (automerge)
         trigger: manual
         deployment: test
     - step: 
-        <<: *run-cd
-        name: "Run Deploy to prod"
+        <<: *run-auto-merge
+        name: Deploy to prod (automerge)
         trigger: manual
         deployment: production
+    
   branches:
     'develop':
       - step: *run-tests
@@ -127,9 +138,15 @@ pipelines:
         - step: *run-build-calculator
       - step: *run-ci
       - step: 
-          <<: *run-cd
-          name: "Run Deploy to test (CD)"
-          deployment: test
+            <<: *run-cd
+            name: Run Deploy to test (CD)
+            deployment: test
+      - step: 
+          <<: *run-auto-merge
+          name: Deploy to prod (automerge)
+          trigger: manual
+          deployment: production
+     
     'master':
       - step: *run-tests
       - parallel:
@@ -144,4 +161,3 @@ pipelines:
           <<: *run-cd
           name: "Run Deploy to prod (CD)"
           deployment: production
-      

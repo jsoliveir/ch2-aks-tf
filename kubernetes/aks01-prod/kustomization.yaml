@@ -15,12 +15,15 @@ images:
     newTag: master.v17 # version stick
 
 
-resources:
+bases:
   - ../services/multiplication
   - ../services/subtraction
   - ../services/calculator
   - ../services/division
   - ../services/addition
+
+resources:
+  - ../services/namespace.yaml
 
 replacements:
   - source:
