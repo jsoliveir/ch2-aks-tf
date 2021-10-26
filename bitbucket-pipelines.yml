@@ -90,7 +90,7 @@ definitions:
           - git clean -d -f
           - git commit -m "[skip ci] merged ${BITBUCKET_BRANCH} into ${BRANCH}"          
           - git checkout -b ${BRANCH} || git checkout ${BRANCH}
-          - git pull 
+          - git pull -s recursive -X ours
           - git merge $BITBUCKET_BRANCH --squash
           - git push -u origin ${BRANCH}
 

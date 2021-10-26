@@ -33,6 +33,17 @@ module "fluxcd_install" {
   }
 }
 
+module "azure_dns" {
+  source = "./modules/dnszones"
+  domain = "azure.jsoliveira.com"
+  environment = "dev"
+  a_records = [{
+    ttl = 3600
+    name = "aks01"
+    records = [ module.aks01_cluster_dev.ingress_ip ]
+  }]
+}
+
 
 # To be continued...
 ## TODO: +1 AKS cluster for dev (in a different region) 

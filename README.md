@@ -129,7 +129,7 @@ For CI I've chosen bitbucket pipelines (just for the fun of it).
 
 I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that will build and push the container into the my docker account.
 
-https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/17/
+https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/19/
 
 
 There are multiple pipelines in the yaml files:
@@ -139,6 +139,7 @@ There are multiple pipelines in the yaml files:
     - then the deploy gets finished the the deploy will run an automerge to master or develop accoording to the deployment target and will update the image version in the kubernetes workloads repo (or directory in our case).
 - FluxCD will know where to deploy the new pushed images (dev or prod) according to the branch and cluster directory. (more details down below)
 
+![](docs/aks-k9s.png)
 
 ## Challenge 4. Deploy it to kubernetes
 
@@ -172,6 +173,8 @@ The kustomziation files will make sure that all services inherit what's needed t
 
 _For CD I've chosen FLuxCD and it will be installed along with the infrastructure.(More details down below.)_
 
+![](docs/aks-k9s.png)
+
 ## Challenge 5: Create infrastructure
 
 Now is the part that we will need you to deploy this system to the target infrastructure.
@@ -200,6 +203,9 @@ terraform init
 # boot up the infra
 terraform apply -auto-approve
 ```
+
+![](docs/azure.png)
+
 ## Bonus
 
 -   Update your CI to also do CD
@@ -217,3 +223,5 @@ The FluxCD will be continuously looking for changes in the repository and applyi
 When a container is built and pushed to the container registry (CI) the pipeline updates the images of the services configured on the kustomization files existing in kubernetes/service directory.
 
 I could use the FluxCD image-automation controller, but I'd prefer to keep it simpler for now.
+
+

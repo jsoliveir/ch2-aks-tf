@@ -7,8 +7,6 @@ commonLabels:
   environment: test
 
 images:
-  - name: jsoliveira/.*
-    newTag: latest-test
   - name: jsoliveira/.*calculator
     newTag: master.v17 # version is stick
 

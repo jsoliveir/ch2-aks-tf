@@ -8,7 +8,7 @@ commonLabels:
 
 images:
   - name: jsoliveira/.*
-    newTag: latest-production
+    newTag: latest-master
   - name: jsoliveira/.*calculator
     newTag: master.v18 # version is stick
   - name: jsoliveira/.*subtraction
