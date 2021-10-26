@@ -164,6 +164,7 @@ kubectl kustomize kubernetes/aks01-dev | kubectl -apply -f -
 kubectl kustomize kubernetes/aks01-prod | kubectl -apply -f -
 ```
 
+
 Instead of creating helm charts I've pereferd using simple templates using the kustomization tool.
 
 The template can be found under the [kubernetes/services/.template](kubernetes/services/.template) dir.
@@ -210,6 +211,16 @@ terraform apply -auto-approve
 
 ![](docs/azure.png)
 
+### Fetching AKS cluster credentials
+
+```powershell
+# Production Cluster
+az aks get-credentials --admin --name aks01-prod-aks --resource-group aks01-cluster-prod-rg
+
+# Development Cluster
+az aks get-credentials --admin --name aks01-dev-aks --resource-group aks01-cluster-dev-rg
+
+```
 ### Destroying the infra
 
 ```powershell

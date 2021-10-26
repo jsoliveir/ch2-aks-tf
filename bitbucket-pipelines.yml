@@ -85,7 +85,8 @@ definitions:
               yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $KUSTOMIZATION ;
               git add $KUSTOMIZATION;              
             done
-          - git clean -d -f
+          # for demo purposes - bitbucket api should be used instead
+          - git clean -d -f && git pull
           - git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
           - git push -u origin ${BITBUCKET_BRANCH}   
 
