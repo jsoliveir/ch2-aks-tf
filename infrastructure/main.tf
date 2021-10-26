@@ -13,6 +13,7 @@ module "aks01_cluster_dev" {
   location = "westeurope"
   cluster_name = "aks01"
   environment = "dev"
+  node_count = 2
 }
 
 module "fluxcd_install" {
@@ -32,15 +33,14 @@ module "fluxcd_install" {
   }
 }
 
-# To be continued...
 
-# module "azure_dns" {
-#   source = "./modules/dnszones"
-#   domain = "azure.jsoliveira.com"
-#   environment = "dev"
-#   a_records = [{
-#     ttl = 3600
-#     name = "aks01"
-#     records = [ module.aks01_cluster_dev.ingress_ip ]
-#   }]
-# }
+# To be continued...
+## TODO: +1 AKS cluster for dev (in a different region) 
+## TODO: +2 AKS clusters for prod (in different regions) 
+## TODO: +2 virtual networks for the GWs
+## TODO: +1 APPGATEWAY for the 2 dev clusters 
+## TODO: +1 APPGATEWAY for the 2 prod clusters 
+## TODO: +1 dnszone for dev 
+## TODO: +1 dnszone for prod
+## TODO: +1 frontdor for prod (depending on the customers region)
+## TODO: make the AKS clusters private accesible thru a private network

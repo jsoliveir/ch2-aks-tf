@@ -33,15 +33,25 @@ resource "azuread_application" "aks" {
 
 resource "azuread_service_principal" "aks" {
   application_id = "${azuread_application.aks.application_id}"
+  depends_on = [
+    azuread_application.aks
+  ]
 }
 
 resource "azuread_service_principal_password" "aks" {
   service_principal_id = "${azuread_service_principal.aks.id}"
+   depends_on = [
+    azuread_service_principal.aks
+  ]
 }
 
 resource "azurerm_resource_group" "aks" {
   name     = "${var.cluster_name}-cluster-${var.environment}-rg"
   location = "${var.location}"
+  depends_on = [
+    azuread_service_principal.aks,
+    azuread_service_principal_password.aks
+  ]
 }
 
 resource "azurerm_kubernetes_cluster" "aks" {
@@ -64,14 +74,20 @@ resource "azurerm_kubernetes_cluster" "aks" {
     name                  = "default"
     os_sku                = "Ubuntu" 
     os_disk_size_gb       = 30
-    node_count            = 1
+    node_count            = var.node_count
     tags                  = local.tags
+    availability_zones    = var.availability_zones
   } 
 
   service_principal {
     client_id             = "${azuread_application.aks.application_id}"
     client_secret         = "${azuread_service_principal_password.aks.value}"
   }
+
+  depends_on = [
+    azurerm_resource_group.aks,
+
+  ]
 }
 
 provider "helm" {
@@ -89,8 +105,11 @@ resource "azurerm_public_ip" "nginx_ingress" {
   sku                          = azurerm_kubernetes_cluster.aks.network_profile.0.load_balancer_sku
   location                     = "${azurerm_kubernetes_cluster.aks.location}"
   resource_group_name          = "${azurerm_kubernetes_cluster.aks.node_resource_group}"
-  domain_name_label            =  "${var.cluster_name}"
-  allocation_method            =  "Static"
+  domain_name_label            = "${var.cluster_name}"
+  allocation_method            = "Static"
+  depends_on = [
+    azuread_service_principal.aks
+  ]
 }
 
 resource "helm_release" "nginx_ingress" {
@@ -112,4 +131,7 @@ resource "helm_release" "nginx_ingress" {
     name  = "service.loadBalancerIP"
     value = "${azurerm_public_ip.nginx_ingress.ip_address}"
   }
+  depends_on = [
+    azurerm_public_ip.nginx_ingress
+  ]
 }

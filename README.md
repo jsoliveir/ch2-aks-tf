@@ -95,11 +95,11 @@ _I would suggest the following branch strategy based on feature and release bran
 
 -  **When a project is starting...**:
     - 1. The team creates a `release` branch from master (`release/xyz`)
-    - 2. Then the team creates `feature` branch (`feature/xpto`) based on the `release` one created before
+    - 2. Later on, the team creates `feature` branch (`feature/xpto`) based on the `release` one created before
     - 3. A business requirement is commited into the `feature` branch (`feature/xpto`).
-    - 3. Once the requirement is ready, the `feature` branch (`feature/xpto`) is merged into the `release` branch (`release/xyz`)
-    - 4. The `release` branch (`release/xyz`), now contains a new `feature` and can be merged into `develop` so the tester can check the `feature` implementation. 
-        (merging the `feature` branch into `develop` is also a valid option but, at the end, it should get merged into the `release` branch [flexibility on projects concurrency])
+    - 3. Once the requirement is ready, the `feature` branch (`feature/xpto`) should be merged into the `release` branch (`release/xyz`)
+    - 4. The `release` branch (`release/xyz`), now contains a new `feature` and can now be merged to `develop` so the tester can check the `feature` implementation. 
+        (merging the `feature` branch into `develop` is also a valid option but, at the end, it should get merged into the `release` branch [for more flexibility on projects concurrency])
     
 -   **When a critical bug comes up from production...**
     - 5. The team creates a `bugfix` branch (`bugfix/fix`) based on `master` (copy of production)
@@ -135,6 +135,32 @@ At this point you should have a proper flow going. Now we need to deploy it!
 
 Please create a script with whatever tools you which to deploy the app to a Kubernetes cluster.
 
+## Answer
+For this challenge I've created a new directory ([kubernetes](kubernetes/)) in the repository root.
+
+The kubernetes directory is ready to be used as a separate repository and contains all the K8s workloads needed for deploying the micro services solution.
+
+Inside the kubernetes/ there are different folders according to our clusters setup (it's always good having control over components deployed in dev and prod)
+
+Deploying K8s workloads to dev:
+
+```powershell
+kubectl kustomize kubernetes/aks01-dev | kubectl -apply -f -
+```
+
+Deploying K8s workloads to prod (just as example):
+
+```powershell
+kubectl kustomize kubernetes/aks01-prod | kubectl -apply -f -
+```
+
+Instead of creating helm charts I've chosen creating simple templates that are reused by the different services thru the kustomization tool.
+
+The template can be found under the [kubernetes/services/.template](kubernetes/services/.template) dir.
+The kustomziation files will make sure that all services inherit what's needed to get the apis up and running in K8s.
+
+_For CD I've chosen FLuxCD and it will be installed along with the infrastructure.(More details down below.)_
+
 ## Challenge 5: Create infrastructure
 
 Now is the part that we will need you to deploy this system to the target infrastructure.
@@ -144,17 +170,17 @@ As a good cloud engineer you will do this in an automated and reproducible way, 
 (note: since testing this solution may incur some costs, we will ignore errors that might come from not testing/running the script)
 
 ## Answer
-For accomplishing this challenge I've chosen terraform with azure as the main cloud provider.
+For accomplishing this challenge I've chosen terraform with azure as cloud provider.
 
-The infrastructure state (terraform state) has been stored in a private azure storage account because of the the existing of sensitive data. The details can be found in the [./infrastructure/main.tf](./infrastructure/main.tf) file.
+The infrastructure state (terraform state) has been stored in a private azure storage account because of the existing of sensitive data. The details of this setup can be found at [./infrastructure/main.tf](./infrastructure/main.tf).
 
-Boot up the infrastructure:
+Booting up the infrastructure:
 
 ```powershell
 # set the working directory
 cd infrastructure
 
-#set the access key for terraform remote backend
+#set the access key for terraform remote backend (state)
 $env:ARM_ACCESS_KEY="<azure storage account access key>"
 
 # install the terraform providers
@@ -169,13 +195,14 @@ terraform apply -auto-approve
 
 ## Aswer
 
-For the CD platform I've chosen FLuxCD.
+For the CD platform I've chosen FLuxCD. https://fluxcd.io/
 
 FluxCD is installed along with the infrastuture (using terraform)
 
 During the installation a remote repository containing the K8s workloads is set. 
 
-Flux will check for changes on the Kubernetes/aksXX-dev cluster folder of the repoitory every 2m. (each flux instance should be pointed to separate directory)
+The FluxCD will be continuously looking for changes in the repository and applying de differences caught by going thru the aks01-dev kustomization entrypoint (kubernetes/aks01-dev for instance). 
 
-When the deployment step runs (bitbucket-pipelines), the image tag will be updated so FluxCD will see the changed and apply them into the AKS cluster.
+When a container is built and pushed to the container registry (CI) the pipeline updates the images of the services configured on the kustomization files existing in kubernetes/service directory.
 
+I could use the FluxCD image-automation controller, but I'd prefer to keep it simpler for now.

@@ -5,7 +5,7 @@ bases:
 images:
   - name: <template>
     newName: jsoliveira/api-services-multiplication
-    newTag: master.v17
+    newTag: master.v18
 commonLabels:
   name: multiplication
 replacements:
