@@ -6,7 +6,7 @@ spec:
   template:
     spec:
       containers:
-        - name: <template>
+        - name: app
           volumeMounts:
             - name: client-config
               mountPath: /opt/app/config.json

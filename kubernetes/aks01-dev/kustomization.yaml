@@ -1,21 +1,27 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: api
-
 commonAnnotations:
+  # making shute that only develop images come into aks-dev
+  fluxcd.io/tag.app: glob:develop*
   cluster: aks01-dev.westeurope.cloudapp.azure.com
   environment: dev
-
 images:
-  - name: jsoliveira/.*calculator
-    newTag: master.v17 # version stick
-
+  - name: '*client'
+    newTag: master.v11
+  - name: '*subtraction'
+    newTag: master.v11
+  - name: '*calculator'
+    newTag: master.v11
+  - name: '*multiplication'
+    newTag: master.v11
+  - name: '*addition'
+    newTag: master.v11
+  - name: '*division'
+    newTag: master.v11
 bases:
   - ../services
-
 resources:
   - namespace.yaml
-
 replacements:
   - source:
       kind: Ingress
@@ -25,11 +31,3 @@ replacements:
           kind: Ingress
         fieldPaths:
           - spec.rules.0.host
-
-patches:
-  - target:
-      kind: Deployment
-    patch: |-
-      - op: add
-        path: /metadata/annotations/fluxcd.io~1tag.app
-        value: glob:develop-*

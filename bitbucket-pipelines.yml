@@ -77,16 +77,26 @@ definitions:
     - step: &run-cd
         name: Run Deploy (CD)
         image: alpine:latest
+        deployment: test
         script: 
           - apk add yq git
           - find . -iname '*.tar' -exec docker load --input {} \;
+          - NEW_TAG="${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER"
+          # it can me moved into the bitbucket deployment variables
+          - case $BITBUCKET_DEPLOYMENT_ENVIRONMENT in
+              prod*) CLUSTER="aks01-prod" ;;
+              test|*) CLUSTER="aks01-dev" ;;
+            esac
+          # update the images[] in in the cluster 
           - for image in $(docker images --format "{{.Repository}}" --filter "dangling=false"); do
-              KUSTOMIZATION=$(find kubernetes/services/*${image#*:} -iname "kustomization.y*ml" -print -quit);
-              yq eval -i ".images[0].newTag=\"${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER\"" $KUSTOMIZATION ;
+              KUSTOMIZATION=$(find kubernetes/$CLUSTER/ -iname "kustomization.y*ml" -print -quit);
+              IMAGE="*${image#*:}"; 
+              IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$NEW_TAG\"}";
+              yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
               git add $KUSTOMIZATION;              
             done
-          # for demo purposes - bitbucket api should be used instead
-          - git clean -d -f && git pull
+          # for demo purposes only - changes shoud be done in a separate K8s repository
+          - git clean -d -f
           - git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
           - git push -u origin ${BITBUCKET_BRANCH}   
 

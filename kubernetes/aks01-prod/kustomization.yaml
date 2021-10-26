@@ -1,14 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
-namespace: api
 
 commonAnnotations:
+  # making shute that only master images come into aks-dev
+  fluxcd.io/tag.app: glob:master*
   cluster: aks01-prod.westeurope.cloudapp.azure.com
   environment: prod
 
 images:
-  - name: jsoliveira/.*
-    newTag: master.v2 
+  - name: jsoliveira/.*calculator
+    newTag: master.v18 # stick this version
 
 
 bases:
@@ -30,11 +31,3 @@ replacements:
           kind: Ingress
         fieldPaths:
           - spec.rules.0.host
-
-patches:
-  - target:
-      kind: Deployment
-    patch: |-
-      - op: add
-        path: /metadata/annotations/fluxcd.io~1tag.app
-        value: glob:master-*

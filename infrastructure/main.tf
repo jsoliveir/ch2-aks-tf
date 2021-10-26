@@ -2,7 +2,7 @@ terraform {
    backend "azurerm" {
     storage_account_name = "jsoliveirastorageaccount"
     container_name       = "terraform"
-    key                  = "tamanna.terraform.tfstate"
+    key                  = "tamanna.0.terraform.tfstate"
     # set the storage access key in the ARM_ACCESS_KEY (environment variable)
   }
 }
@@ -63,7 +63,7 @@ module "fluxcd_install_dev" {
   config = {
     repository = "https://bitbucket.org/jsoliveira/challenge-devops-master"
     repository_path = "kubernetes/aks01-dev"
-    repository_branch = "master"
+    repository_branch = "develop"
     namespace = "flux-system"
   }
 }
