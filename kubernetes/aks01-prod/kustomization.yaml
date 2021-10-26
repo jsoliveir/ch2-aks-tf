@@ -7,8 +7,8 @@ commonAnnotations:
   environment: prod
 
 images:
-  - name: jsoliveira/.*calculator
-    newTag: master.v18 
+  - name: jsoliveira/.*
+    newTag: develop.v2 
 
 
 bases:
@@ -31,3 +31,10 @@ replacements:
         fieldPaths:
           - spec.rules.0.host
 
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /metadata/annotations/fluxcd.io~1tag.app
+        value: glob:master-*

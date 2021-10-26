@@ -12,7 +12,7 @@ spec:
         app: <template>
     spec:
       containers:
-      - name: <template>
+      - name: app
         image: <template>
         imagePullPolicy: Always
         resources:

@@ -19,7 +19,6 @@ replacements:
           - metadata.name
           - spec.selector.matchLabels.app
           - spec.template.metadata.labels.app
-          - spec.template.spec.containers.0.name
       - select:
           kind: Service
         fieldPaths:

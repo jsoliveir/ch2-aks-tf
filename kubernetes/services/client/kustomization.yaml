@@ -18,7 +18,6 @@ replacements:
         fieldPaths:
           - metadata.name
           - spec.template.metadata.labels.app
-          - spec.template.spec.containers.0.name
       - select:
           kind: Service
         fieldPaths:

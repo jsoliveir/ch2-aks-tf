@@ -25,3 +25,11 @@ replacements:
           kind: Ingress
         fieldPaths:
           - spec.rules.0.host
+
+patches:
+  - target:
+      kind: Deployment
+    patch: |-
+      - op: add
+        path: /metadata/annotations/fluxcd.io~1tag.app
+        value: glob:develop-*
