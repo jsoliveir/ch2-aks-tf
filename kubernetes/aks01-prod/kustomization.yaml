@@ -9,8 +9,6 @@ commonAnnotations:
 images:
   - name: jsoliveira/.*calculator
     newTag: master.v18 
-  - name: jsoliveira/.*subtraction
-    newTag: master.v17
 
 
 bases:
@@ -21,7 +19,7 @@ bases:
   - ../services/addition
 
 resources:
-  - ../services/namespace.yaml
+  - namespace.yaml
 
 replacements:
   - source:

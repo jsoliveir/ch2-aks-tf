@@ -10,8 +10,11 @@ images:
   - name: jsoliveira/.*calculator
     newTag: master.v17 # version stick
 
-resources:
+bases:
   - ../services
+
+resources:
+  - namespace.yaml
 
 replacements:
   - source:
