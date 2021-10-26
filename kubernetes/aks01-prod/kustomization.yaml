@@ -7,12 +7,10 @@ commonAnnotations:
   environment: prod
 
 images:
-  - name: jsoliveira/.*
-    newTag: latest-master
   - name: jsoliveira/.*calculator
-    newTag: master.v18 # version stick
+    newTag: master.v18 
   - name: jsoliveira/.*subtraction
-    newTag: master.v17 # version stick
+    newTag: master.v17
 
 
 bases:
