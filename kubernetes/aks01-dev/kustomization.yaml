@@ -6,9 +6,11 @@ commonLabels:
   cluster: aks01
   environment: test
 
-# images:
-    # - name: jsoliveira/.*
-    # newTag: v1.0.0  #stick to a specific version
+images:
+  - name: jsoliveira/.*
+    newTag: latest-test
+  - name: jsoliveira/.*calculator
+    newTag: master.v17 # version is stick
 
 resources:
   - ../services

@@ -66,7 +66,7 @@ definitions:
           - docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
           - find . -iname '*.tar' -exec docker load --input {} \;
           - NEW_TAG="${BITBUCKET_BRANCH/\//-}.v$BITBUCKET_BUILD_NUMBER"
-          - NEW_TAG_LATEST="latest-$BITBUCKET_DEPLOYMENT_ENVIRONMENT"
+          - NEW_TAG_LATEST="latest-${BITBUCKET_BRANCH/\//-}"
           - for image in $(docker images --format "{{.Repository}}" --filter "dangling=false"); do
               docker tag $image "jsoliveira/api-services-${image#*:}:$NEW_TAG";
               docker tag $image "jsoliveira/api-services-${image#*:}:$NEW_TAG_LATEST" ;
