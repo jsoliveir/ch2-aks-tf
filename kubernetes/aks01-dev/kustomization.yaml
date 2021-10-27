@@ -7,17 +7,17 @@ commonAnnotations:
   environment: dev
 images:
   - name: '*client'
-    newTag: master.v11
+    newTag: develop.v2
   - name: '*subtraction'
-    newTag: master.v11
+    newTag: develop.v2
   - name: '*calculator'
-    newTag: master.v11
+    newTag: develop.v2
   - name: '*multiplication'
-    newTag: master.v11
+    newTag: develop.v2
   - name: '*addition'
-    newTag: master.v11
+    newTag: develop.v2
   - name: '*division'
-    newTag: master.v11
+    newTag: develop.v2
 bases:
   - ../services
 resources:
