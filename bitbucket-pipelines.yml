@@ -95,7 +95,7 @@ definitions:
               yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
               git add $KUSTOMIZATION;              
             done
-          # for demo purposes only - changes shoud be done in a separate K8s repository
+          # for demo purposes only - changes shoud be done thru BB api and in a separate K8s repository
           - git clean -d -f
           - git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
           - git push -u origin ${BITBUCKET_BRANCH}   
