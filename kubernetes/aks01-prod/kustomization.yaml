@@ -24,6 +24,7 @@ bases:
   - ../services/calculator
   - ../services/division
   - ../services/addition
+  - ../services/client
 resources:
   - namespace.yaml
 replacements:
