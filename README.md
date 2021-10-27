@@ -95,17 +95,19 @@ _I would suggest the following branch strategy based on feature and release bran
 
 -  **When a project is starting...**:
     - 1. The team creates a `release` branch from master (`release/xyz`)
-    - 2. Later on, the team creates `feature` branch (`feature/xpto`) based on the `release` one created before
-    - 3. A business requirement is commited into the `feature` branch (`feature/xpto`).
-    - 3. Once the requirement is ready, the `feature` branch (`feature/xpto`) should be merged into the `release` branch (`release/xyz`)
-    - 4. The `release` branch (`release/xyz`), now contains a new `feature` and can now be merged to `develop` so the tester can check the `feature` implementation. 
-        (merging the `feature` branch into `develop` is also a valid option but, at the end, it should get merged into the `release` branch [for more flexibility on projects concurrency])
+    - 2. Later on, the team creates a `feature` branch (`feature/xpto`) based on the `release` one created before
+    - 3. A business requirement is commited into the `feature` branch.
+    - 3. Since the development is done, the `feature` branch can be merged into the `release` branch
+    - 4. The `release` branch, now contains a new `feature` and can now be merged to `develop` so the tester can check the `feature` implementation.
+
+            (merging the `feature` branch into `develop` is also a valid option but, at the end, it should get merged into the `release` branch [for more flexibility on projects concurrency])
     
--   **When a critical bug comes up from production...**
+-   **When a bug shows up in production ...**
     - 5. The team creates a `bugfix` branch (`bugfix/fix`) based on `master` (copy of production)
     - 6. The bug fix is committed into the new `bugfix` branch and then merged to `develop` so the tester can make sure that the issue is fixed. 
     - 7. Since the tester gives the thumbs up, the `bugfix` branch can be merged to `master` 
-        ( merging `develop` into `master` is also a valid option, but the team must be aware of new features in develop [waiting for the release] before the merging ).
+    
+            ( merging `develop` into `master` is also a valid option, but the team must be aware of new features in develop [waiting for the release] before the merging ).
 
 ```
     [feature/*]    /7-\\------\\-----------------\\
@@ -127,17 +129,25 @@ Choose one system, travis-ci, gitlab-ci, circleci... whatever you want and make 
 
 For CI I've chosen bitbucket pipelines (just for the fun of it).
 
-I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that will build and push the container images into the my docker hub account. https://hub.docker.com/u/jsoliveira
-
-https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/5
+I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that is going to build and push the container images into my docker hub account. https://hub.docker.com/u/jsoliveira
 
 
-There are multiple pipelines in the yaml files:
-- one that does the CI for dev on code pushing to develop
-- one that does the CI for prod on code pushing to master
-- one that let the developers chose the branch to deploy (manually)
-    - then the deploy gets finished the the deploy will run an automerge to master or develop accoording to the deployment target and will update the image version in the kubernetes workloads repo (or directory in our case).
-- FluxCD will know where to deploy the new pushed images (dev or prod) according to the branch and cluster directory. (more details down below)
+- **Master** _(CI and CD)_
+    - https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/1
+- **Develop** _(CI and CD)_
+    - https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/2
+- **Feature** _(CI)_
+    - https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/3
+
+
+There are multiple pipelines in the yaml file:
+1) one for CI/CD in test (develop branch)
+2) one for CI/CD in prod (master master)
+3) one for CI (any branch) so the developers can chose their own branch and release it thru a Pull Request
+
+- Once a a branch is merged to develop or master the pipelines will push the containers into the container registry (CI) and the kustomization.yml of the K8s clusters is updated with the latest images built.
+
+- FluxCD will see that the repository has changed and will apply the kubernetes workload definitions on the prod or dev cluster (more details down below)
 
 ## Challenge 4. Deploy it to kubernetes
 
@@ -148,32 +158,60 @@ Please create a script with whatever tools you which to deploy the app to a Kube
 ## Answer
 For this challenge I've created a new directory ([kubernetes](kubernetes/)) in the repository root.
 
-The kubernetes directory is ready to be used as a separate repository and it contains all the K8s workloads needed for deploying the micro services solution.
+The kubernetes directory is ready to be used as a separate repository and it contains all the K8s workloads definitions needed for deploying the micro services solution to a cluster.
 
-Inside the [kubernetes](kubernetes/) dir there are different folders reprenting the different AKS clusters.
+Inside the [kubernetes](kubernetes/) dir there are different folders reprenting the different AKS clusters (dev and prod as just examples).
 
-The Kustomization.yaml files will ensure that each cluster receive the proper workload definitions.
+The Kustomization.yaml files will ensure that each cluster (environment) gets the suitable workload definitions.
 
-Deploying K8s workloads to dev:
+- [kubernetes/aks01-dev/kustomization.yaml](kubernetes/aks01-dev/kustomization.yaml)
+
+- [kubernetes/aks01-prod/kustomization.yaml](kubernetes/aks01-prod/kustomization.yaml)
+
+_(The kustomization files above are updated by the pipelines for CD)_
+
+**Deploying K8s workloads:**
 
 ```powershell
+
+# DEV Cluster
 kubectl kustomize kubernetes/aks01-dev | kubectl -apply -f -
 
-#or
-
+# PROD Cluster
 kubectl kustomize kubernetes/aks01-prod | kubectl -apply -f -
 ```
 
+### **About the Workload definitions ...**
 
-Instead of creating helm charts I've pereferd using simple templates using the kustomization tool.
+Instead of creating helm charts I've pereferd using simple templates taking the advantages of the kustomization tool.
 
-The template can be found under the [kubernetes/services/.template](kubernetes/services/.template) dir.
+The template can be found in the [kubernetes/services/.template](kubernetes/services/.template) directory.
 
-The kustomziation files will make sure that all services inherit what's needed to get the containers running in a K8s CLuster.
+There is a kustomization file for each service that will ensusre that the .template is properly inherited as well as each service get the specific configuration in order to be deployed separatedly
+(whithout having to deploy the entire cluster)
 
-_For CD I've chosen FLuxCD and it will be installed along with the infrastructure.(More details down below.)_
+**Deploying a single service**
+```powershell
+kubectl kustomize kubernetes/services/addition | kubectl -apply -f -
+```
+
+
+_As said before, FLuxCD was the candidate for making the CD happen_ 
+
+_It is installed along with the infrastructure.(More details down below.)_
+
+**Login into the cluster**
+```powershell
+# DEV Cluster
+az aks get-credentials --admin --name aks01-dev-aks --resource-group aks01-cluster-dev-rg
+
+# PROD Cluster
+az aks get-credentials --admin --name aks01-prod-aks --resource-group aks01-cluster-prod-rg
+```
+
 
 ![](docs/aks-k9s.png)
+https://github.com/derailed/k9s
 
 ## Challenge 5: Create infrastructure
 
@@ -186,7 +224,9 @@ As a good cloud engineer you will do this in an automated and reproducible way, 
 ## Answer
 For accomplishing this challenge I've chosen terraform + azure as cloud provider.
 
-The infrastructure state (terraform state) has been stored in a private azure storage account (because of sensitive data). For this challenge I am assuming that high availability and extra security is not needed. 
+The infrastructure state (terraform state) has been stored in a private azure storage account (because of sensitive data). 
+
+For this challenge I am assuming that high availability and extra security is not needed. 
 
 The details of the infrastructure and AKS clusters setup can be found at [./infrastructure/main.tf](./infrastructure/main.tf).
 
@@ -211,7 +251,7 @@ terraform apply -auto-approve
 
 ![](docs/azure.png)
 
-### Fetching AKS cluster credentials
+### **Fetching AKS cluster credentials**
 
 ```powershell
 # Production Cluster
@@ -221,7 +261,7 @@ az aks get-credentials --admin --name aks01-prod-aks --resource-group aks01-clus
 az aks get-credentials --admin --name aks01-dev-aks --resource-group aks01-cluster-dev-rg
 
 ```
-### Destroying the infra
+### **Destroying the infra**
 
 ```powershell
 terraform destroy -auto-approve
@@ -231,18 +271,28 @@ terraform destroy -auto-approve
 
 -   Update your CI to also do CD
 
-## Aswer
 
-For the CD platform I've chosen FLuxCD. https://fluxcd.io/
+## Answer
+
+For the CD I've chosen FLuxCD. 
+
+https://fluxcd.io/
 
 FluxCD is installed along with the infrastuture (using terraform):
 - [./infrastructure/main.tf](./infrastructure/main.tf)
 - [./infrastructure/modules/fluxcd](./infrastructure/modules/fluxcd)
 
-During the installation a remote repository containing all the K8s workloads is configured.
+During the installation the K8s workloads definitions repository (bitbucket) is provided and configured in the cluster.
 
-The FluxCD will be continuously looking for changes in the remote repository. When new commits arrive the differences are applyied to the existing AKS clusters thru the "kustomization" of the [aks01-dev](kubernetes/aks01-dev) and [aks01-prod](kubernetes/aks01-prod) directories.
+The FluxCD will be continuously looking for changes in the remote repository. 
 
-When a container is built by the bitbucket-pipelines.yml the version of the containers built are commited to to the kubernetes [repository](kubernetes/), then the FluxCD will sync the repository with the K8s cluster. 
+When new commits arrive FLux will ensure that the sate of the cluster is properly applied.
 
-I could use the FluxCD controllers for image-automation, but I'd prefer to keep it simpler.
+I've created two clusters for prod and dev (just for the fun of it)
+- [kubernetes/aks01-dev](kubernetes/aks01-dev)
+
+- [kubernetes/aks01-prod](kubernetes/aks01-prod)
+
+The bitbucket-pipelines is updating the clusters repository with the latest version of the containers built and FluxCD will sync the repo with the cluster (based on the branch)
+
+_I could use the FluxCD controllers for image-automation, but I'd prefer to keep it simpler._
