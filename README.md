@@ -211,6 +211,8 @@ az aks get-credentials --admin --name aks01-prod-aks --resource-group aks01-clus
 
 
 ![](docs/aks-k9s.png)
+![](docs/aks-k9s-prod.png)
+
 https://github.com/derailed/k9s
 
 ## Challenge 5: Create infrastructure
