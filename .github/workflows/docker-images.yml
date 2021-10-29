@@ -1,0 +1,60 @@
+name: Docker Image CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Build client
+      run: docker build services/client -t client:latest -f services/client/Dockerfile
+    - name: Build addition
+      run: docker build services/addition -t addition:latest -f services/addition/Dockerfile
+    - name: Build division
+      run: docker build services/division -t division:latest -f services/division/Dockerfile
+    - name: Build multiplication
+      run: docker build services/multiplication -t multiplication:latest -f services/multiplication/Dockerfile
+    - name: Build subtraction
+      run: docker build services/subtraction -t subtraction:latest -f services/subtraction/Dockerfile
+    - name: Build remainder
+      run: docker build services/remainder -t remainder:latest -f services/remainder/Dockerfile
+    - name: Build calculator
+      run: docker build services/calculator -t calculator:latest -f services/calculator/Dockerfile
+    - name: Push Container Images
+      run: |-
+         docker login --username ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }}
+         find . -iname '*.tar' -exec docker load --input {} \;
+         BRANCH_NAME=${GITHUB_REF##*/}
+         NEW_TAG="$BRANCH_NAME.v$GITHUB_RUN_ID"
+         NEW_TAG_LATEST="latest-${BRANCH_NAME/\//-}"
+         for image in $(ls services | grep -v base); do
+            docker tag $image "jsoliveira/api-services-${image}:$NEW_TAG";
+            docker tag $image "jsoliveira/api-services-${image}:$NEW_TAG_LATEST" ;
+            docker push "jsoliveira/api-services-${image}:$NEW_TAG";
+            docker push "jsoliveira/api-services-${image}:$NEW_TAG_LATEST";
+            docker image rm "jsoliveira/api-services-${image}:$NEW_TAG_LATEST" ;
+          done
+    - name: Deploy (CD)
+      if: ${{ github.ref == 'refs/heads/master' ||  github.ref == 'refs/heads/develop' }}
+      run: |-
+        for service in $(ls services | grep -v base); do
+            KUSTOMIZATION=$(find kubernetes/$CLUSTER/ -iname "kustomization.y*ml" -print -quit);
+            IMAGE="*${service}"; 
+            IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$NEW_TAG\"}";
+            yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
+            git add $KUSTOMIZATION;              
+         done
+         git config --global user.email "cicd@devlops-pipelines.org"
+         git config --global user.name "DevOps"
+         git clean -d -f
+         git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
+         git push -u origin ${BITBUCKET_BRANCH}  
+      
