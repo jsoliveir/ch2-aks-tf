@@ -1,0 +1,34 @@
+name: Deploy to K8s
+
+on:
+  workflow_run:
+    branches: 
+      - master
+      - develop
+    workflows: 
+      - Build
+    types:
+      - completed
+    
+jobs:
+  deployment:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Deploy (CD)
+      if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
+      run: |-    
+       BRANCH_NAME="${GITHUB_REF##*/}"
+       for service in $(ls services | grep -v base); do
+           KUSTOMIZATION=$(find kubernetes/$CLUSTER/ -iname "kustomization.y*ml" -print -quit);
+           IMAGE="*${service}"; 
+           NEW_TAG="${BRANCH_NAME}.v$GITHUB_RUN_ID"
+           IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$NEW_TAG\"}";
+           yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
+           git add $KUSTOMIZATION;              
+        done
+        git config --global user.email "cicd@devlops-pipelines.org"
+        git config --global user.name "DevOps"
+        git clean -d -f
+        git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
+        git push -u origin ${BRANCH_NAME}  
