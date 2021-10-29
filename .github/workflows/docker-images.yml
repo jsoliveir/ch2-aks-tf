@@ -44,10 +44,11 @@ jobs:
           done
     - name: Deploy (CD)
       if: ${{ github.ref == 'refs/heads/master' ||  github.ref == 'refs/heads/develop' }}
-      run: |-
+      run: |-               
         for service in $(ls services | grep -v base); do
             KUSTOMIZATION=$(find kubernetes/$CLUSTER/ -iname "kustomization.y*ml" -print -quit);
             IMAGE="*${service}"; 
+            NEW_TAG="${GITHUB_REF##*/}.v$GITHUB_RUN_ID"
             IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$NEW_TAG\"}";
             yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
             git add $KUSTOMIZATION;              

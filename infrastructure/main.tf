@@ -61,7 +61,7 @@ module "fluxcd_install_dev" {
     cluster_ca_certificate = module.aks01_cluster_dev.kube_config.cluster_ca_certificate
   }
   config = {
-    repository = "https://bitbucket.org/jsoliveira/challenge-devops-master"
+    repository = "https://github.com/jsoliveir/challenge-devops-master"
     repository_path = "kubernetes/aks01-dev"
     repository_branch = "develop"
     namespace = "flux-system"
@@ -78,7 +78,7 @@ module "fluxcd_install_prod" {
     cluster_ca_certificate = module.aks01_cluster_prod.kube_config.cluster_ca_certificate
   }
   config = {
-    repository = "https://bitbucket.org/jsoliveira/challenge-devops-master"
+    repository = "https://github.com/jsoliveir/challenge-devops-master"
     repository_path = "kubernetes/aks01-prod"
     repository_branch = "master"
     namespace = "flux-system"
