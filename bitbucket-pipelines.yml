@@ -21,7 +21,7 @@ definitions:
     - step: &run-build-addition
         name: "Run Build addition"
         script:
-          - docker build services/division -t addition:latest -f services/addition/Dockerfile
+          - docker build services/addition -t addition:latest -f services/addition/Dockerfile
           - docker save addition:latest --output addition.tar
         artifacts: [ addition.tar ]
         caches: [ docker ]

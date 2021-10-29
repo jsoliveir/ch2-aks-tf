@@ -3,20 +3,50 @@ name: Deploy to K8s
 on:
   workflow_run:
     branches: 
-      - master
       - develop
+      - master
     workflows: 
       - Build
     types:
       - completed
-    
+      
+env:
+  BRANCH_NAME: "${GITHUB_REF##*/}"
+  TAG: "${BRANCH_NAME}.v$GITHUB_RUN_ID"
+  
 jobs:
-  deployment:
+  deployment-dev:
+    if: github.ref == 'refs/heads/develop'
+    environment: development
+    env:
+      CLUSTER: aks01-dev
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Deploy (CD)
-      if: ${{ github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
+    - uses: dawidd6/action-git-user-config@v1
+    - name: Deploy to dev
+      run: |-    
+       for service in $(ls services | grep -v base); do
+           IMAGE="*${service}"; 
+           IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$TAG\"}";
+           KUSTOMIZATION="kubernetes/$CLUSTER/kustomization.yaml";
+           yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
+           git add $KUSTOMIZATION;              
+        done
+        git clean -d -f
+        git commit -m "release to development [skip ci]";
+        git push -u origin ${BRANCH_NAME}
+        
+  deployment-prod:
+    if: github.ref == 'refs/heads/master'
+    environment: production
+    env:
+      CLUSTER: aks01-prod
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: dawidd6/action-git-user-config@v1
+    - name: Deploy to prod
       run: |-    
        BRANCH_NAME="${GITHUB_REF##*/}"
        for service in $(ls services | grep -v base); do
@@ -27,8 +57,7 @@ jobs:
            yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
            git add $KUSTOMIZATION;              
         done
-        git config --global user.email "cicd@devlops-pipelines.org"
-        git config --global user.name "DevOps"
         git clean -d -f
-        git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
-        git push -u origin ${BRANCH_NAME}  
+        git commit -m "release to production [skip ci]";
+        git push -u origin ${BRANCH_NAME}
+      

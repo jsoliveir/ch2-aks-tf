@@ -7,19 +7,19 @@ images:
     newName: jsoliveira/api-services-subtraction
     newTag: latest-test
   - name: '*addition'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
   - name: '*calculator'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
   - name: '*client'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
   - name: '*division'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
   - name: '*multiplication'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
   - name: '*remainder'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
   - name: '*subtraction'
-    newTag: master.v1399528867
+    newTag: master.v1399550677
 commonLabels:
   name: subtraction
 replacements:
