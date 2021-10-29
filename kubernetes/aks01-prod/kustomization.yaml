@@ -7,19 +7,19 @@ commonAnnotations:
   environment: prod
 images:
   - name: '*addition'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
   - name: '*calculator'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
   - name: '*client'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
   - name: '*division'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
   - name: '*multiplication'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
   - name: '*remainder'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
   - name: '*subtraction'
-    newTag: master.v1399878854
+    newTag: master.v1399906011
 bases:
   - ../services/multiplication
   - ../services/subtraction
