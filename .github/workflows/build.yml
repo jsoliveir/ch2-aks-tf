@@ -8,10 +8,8 @@ on:
 
 jobs:
 
-  Deploy:
-
+  build:
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v2
     - name: Build client
@@ -42,20 +40,4 @@ jobs:
             docker push "jsoliveira/api-services-${image}:$NEW_TAG_LATEST";
             docker image rm "jsoliveira/api-services-${image}:$NEW_TAG_LATEST" ;
           done
-    - name: Deploy (CD)
-      if: ${{ github.ref == 'refs/heads/master' ||  github.ref == 'refs/heads/develop' }}
-      run: |-               
-        for service in $(ls services | grep -v base); do
-            KUSTOMIZATION=$(find kubernetes/$CLUSTER/ -iname "kustomization.y*ml" -print -quit);
-            IMAGE="*${service}"; 
-            NEW_TAG="${GITHUB_REF##*/}.v$GITHUB_RUN_ID"
-            IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$NEW_TAG\"}";
-            yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
-            git add $KUSTOMIZATION;              
-         done
-         git config --global user.email "cicd@devlops-pipelines.org"
-         git config --global user.name "DevOps"
-         git clean -d -f
-         git commit -m "release to $BITBUCKET_DEPLOYMENT_ENVIRONMENT [skip ci]";
-         git push -u origin ${BITBUCKET_BRANCH}  
-      
+
