@@ -1,0 +1,66 @@
+stages:
+  - test
+  - build
+  - CI
+  - CD
+
+docker-build:
+  image: docker:latest
+  stage: build
+  artifacts:
+    paths:
+       - '*.docker'
+    expire_in: 1 day
+  services:
+    - docker:dind
+  script: |
+    VERSION="$CI_COMMIT_BRANCH.v$CI_JOB_ID"
+    for image in $(ls services | grep -v base); do
+      IMAGE_1="jsoliveira/api-services-$image:$VERSION"
+      IMAGE_2="jsoliveira/api-services-$image:latest-$CI_COMMIT_BRANCH"
+      docker build services/$image -t $IMAGE_1 -f services/$image/Dockerfile --label "commit=$CI_COMMIT_SHORT_SHA";
+      docker tag $IMAGE_1 $IMAGE_2;
+      docker save $IMAGE_1 $IMAGE_2 --output $image.docker
+    done
+
+
+docker-push:
+  image: docker:latest
+  stage: CI
+  services:
+    - docker:dind
+  before_script:
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" 
+    - find -iname '*.docker' -exec docker load --input {} \;
+  script: |
+    for image in $(docker images --format "{{.Repository}}:{{.Tag}}" --filter "dangling=false"); do     
+      docker push -q $image;
+    done
+
+k8s-deploy:
+  stage: CD
+  image: docker:latest
+  environment: test
+  services:
+    - docker:dind
+  before_script:
+    - apk add git yq
+    - git config --global user.name "CI/CD"
+    - git config --global user.email "pipelines@devops"
+    - find -iname '*.docker' -exec docker load --input {} \;
+  script: |
+    case $CI_ENVIRONMENT_NAME in
+      test|*) CLUSTER=aks01-dev ;;
+      prod*) CLUSTER=aks01-prod ;;
+    esac
+    for image in $(docker images --format "{{.Repository}}:{{.Tag}}" --filter "dangling=false"); do     
+      TAG="${image%:*}";
+      IMAGE="*${image#*:}"; 
+      IMAGE_OBJECT="{\"name\":\"$IMAGE\",\"newTag\":\"$TAG\"}";
+      KUSTOMIZATION="kubernetes/$CLUSTER/kustomization.yaml";
+      yq eval -i ".images = ([.images[] | select(.name != \"*$IMAGE*\")] + $IMAGE_OBJECT)" $KUSTOMIZATION;
+      git add $KUSTOMIZATION;              
+    done
+    git clean -d -f
+    git commit -m "release to $CLUSTER"
+    # git push -u origin $CI_COMMIT_BRANCH
