@@ -132,12 +132,10 @@ For CI I've chosen bitbucket pipelines (just for the fun of it).
 I've created a [bitbucket-pipeline.yml](bitbucket-pipeline.yml) file in the repository root that is going to build and push the container images into my docker hub account. https://hub.docker.com/u/jsoliveira
 
 
-- **Master** _(CI and CD)_
-    - https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/1
-- **Develop** _(CI and CD)_
-    - https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/2
-- **Feature** _(CI)_
-    - https://bitbucket.org/jsoliveira/challenge-devops-master/addon/pipelines/home#!/results/3
+- **Build** _(CI)_
+    - https://github.com/jsoliveir/challenge-devops-master/actions/workflows/build.yml
+- **Deploy** _(CD)_
+    - https://github.com/jsoliveir/challenge-devops-master/actions/workflows/deployment.yml
 
 
 There are multiple pipelines in the yaml file:
